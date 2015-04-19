@@ -8,11 +8,15 @@ module.exports = {
         { elem: 'css', url: './public/index/_index.css' },
         { elem: 'css', url: '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css' }
     ],
-    scripts: [{ elem: 'js', url: './public/index/_index.js' }],
-    mods: { theme: 'o-board' },
+    scripts: [
+        { elem: 'js', url: './libs/jquery/dist/jquery.js' },
+        { elem: 'js', url: './libs/underscore/underscore.js' },
+        { elem: 'js', url: './libs/backbone/backbone.js' },
+        { elem: 'js', url: './libs/marionette/lib/backbone.marionette.js' },
+        { elem: 'js', url: './public/index/_index.js' }
+    ],
     content: {
-        // Корневой блок app, в нем вся логика дашборда
-        //block: 'app',
+        block: 'application'
         //content: [
         //    {
         //        block: 'header',

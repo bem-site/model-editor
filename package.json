@@ -33,6 +33,7 @@
     "vow-node": "^0.2.x"
   },
   "devDependencies": {
+    "bem": "^0.9.0",
     "bower": "~1.4.x",
     "borschik": "^1.3.2",
     "borschik-tech-cleancss": "^1.0.3",
