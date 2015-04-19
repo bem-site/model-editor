@@ -1,70 +1,92 @@
-module.exports = function (config) {
-    config.nodes('src/*.bundles/*', function (nodeConfig) {
-        nodeConfig.addTechs([
-            [require('enb/techs/file-provider'), { target: '?.bemdecl.js' }],
-            [require('enb-bem-techs/techs/files')],
-            [require('enb-bem-techs/techs/deps')],
-            [require('enb-bemxjst/techs/bemtree'), { devMode: false }],
-            [require('enb-diverse-js/techs/browser-js'), { target: '?.pre.js' }],
-            [require('enb-modules/techs/prepend-modules'), {
-                target: '?.js',
-                source: '?.pre.js'
-            }],
-            [require('enb-stylus/techs/css-stylus'), { target: '?.noprefix.css' }],
-            [require('enb-bemxjst/techs/bemhtml'), { devMode: false }]
-        ]);
+var ENV = process.env['NODE_ENV'] || 'development',
+    isProd = process.env['NODE_ENV'] === 'production',
+    techs = {
+        // essential
+        fileProvider: require('enb/techs/file-provider'),
+        fileMerge: require('enb/techs/file-merge'),
 
-        nodeConfig.addTargets([
-            '?.min.css',
-            '?.min.bemtree.js',
-            '?.min.js',
-            '?.min.bemhtml.js'
-        ]);
-    });
+        // optimization
+        borschik: require('enb-borschik/techs/borschik'),
 
-    config.nodes('src/common.bundles/*', function (nodeConfig) {
-        nodeConfig.addTechs([
-            [require('enb-bem-techs/techs/levels'), { levels: getDesktops(config) }],
-            [require('enb-autoprefixer/techs/css-autoprefixer'), {
-                browserSupport: [ 'last 2 versions', 'ie 10', 'ff 24', 'opera 12.16' ],
-                sourceTarget: '?.noprefix.css'
-            }]
-        ]);
-    });
+        // css
+        cssStylus: require('enb-stylus/techs/css-stylus'),
+        cssAutoprefixer: require('enb-autoprefixer/techs/css-autoprefixer'),
 
-    config.mode('development', function (modeConfig) {
-        config.nodes('src/*.bundles/*', function (nodeConfig) {
-            nodeConfig.addTechs([
-                [require('enb/techs/file-copy'), { sourceTarget: '?.css', destTarget: '?.min.css' }],
-                [require('enb/techs/file-copy'), { sourceTarget: '?.bemtree.js', destTarget: '?.min.bemtree.js' }],
-                [require('enb/techs/file-copy'), { sourceTarget: '?.js', destTarget: '?.min.js' }],
-                [require('enb/techs/file-copy'), { sourceTarget: '?.bemhtml.js', destTarget: '?.min.bemhtml.js' }]
-            ]);
-        });
-    });
+        // js
+        browserJs: require('enb-diverse-js/techs/browser-js'),
+        prependYm: require('enb-modules/techs/prepend-modules'),
 
-    config.mode('production', function () {
-        config.nodes('src/*.bundles/*', function (nodeConfig) {
-            nodeConfig.addTechs([
-                [require('enb-borschik/techs/borschik'), { sourceTarget: '?.css', destTarget: '?.min.css' }],
-                [require('enb-borschik/techs/borschik'), { sourceTarget: '?.bemtree.js', destTarget: '?.min.bemtree.js' }],
-                [require('enb-borschik/techs/borschik'), { sourceTarget: '?.js', destTarget: '?.min.js' }],
-                [require('enb-borschik/techs/borschik'), { sourceTarget: '?.bemhtml.js', destTarget: '?.min.bemhtml.js' }]
-            ]);
-        });
-    });
-};
-
-function getDesktops(config) {
-    return [
+        // bemhtml
+        bemhtml: require('enb-bemxjst/techs/bemhtml'),
+        htmlFromBemjson: require('enb-bemxjst/techs/html-from-bemjson')
+    },
+    enbBemTechs = require('enb-bem-techs'),
+    levels = [
         { path: 'libs/bem-core/common.blocks', check: false },
         { path: 'libs/bem-core/desktop.blocks', check: false },
         { path: 'libs/bem-components/common.blocks', check: false },
-        { path: 'libs/bem-components/design/common.blocks', check: false },
         { path: 'libs/bem-components/desktop.blocks', check: false },
+        { path: 'libs/bem-components/design/common.blocks', check: false },
         { path: 'libs/bem-components/design/desktop.blocks', check: false },
-        'src/common.blocks',
-    ].map(function (level) {
-            return config.resolvePath(level);
-        });
-}
+        'src/common.blocks'
+    ];
+
+module.exports = function(config) {
+    config.nodes('public/*', function(nodeConfig) {
+        nodeConfig.addTechs([
+            // essential
+            [enbBemTechs.levels, { levels: levels }],
+            [techs.fileProvider, { target: '?.bemjson.js' }],
+            [enbBemTechs.bemjsonToBemdecl],
+            [enbBemTechs.deps],
+            [enbBemTechs.files],
+
+            // css
+            [techs.cssStylus, { target: '?.noprefix.css' }],
+            [techs.cssAutoprefixer, {
+                sourceTarget: '?.noprefix.css',
+                destTarget: '?.css',
+                browserSupport: ['last 2 versions', 'ie 10', 'opera 12.16']
+            }],
+
+            // bemhtml
+            [techs.bemhtml, { devMode: process.env.BEMHTML_ENV === 'development' }],
+            [techs.htmlFromBemjson],
+
+            // client bemhtml
+            [enbBemTechs.depsByTechToBemdecl, {
+                target: '?.bemhtml.bemdecl.js',
+                sourceTech: 'js',
+                destTech: 'bemhtml'
+            }],
+            [enbBemTechs.deps, {
+                target: '?.bemhtml.deps.js',
+                bemdeclFile: '?.bemhtml.bemdecl.js'
+            }],
+            [enbBemTechs.files, {
+                depsFile: '?.bemhtml.deps.js',
+                filesTarget: '?.bemhtml.files',
+                dirsTarget: '?.bemhtml.dirs'
+            }],
+            [techs.bemhtml, {
+                target: '?.browser.bemhtml.js',
+                filesTarget: '?.bemhtml.files',
+                devMode: process.env.BEMHTML_ENV === 'development'
+            }],
+
+            // js
+            [techs.browserJs],
+            [techs.fileMerge, {
+                target: '?.pre.js',
+                sources: ['?.browser.js', '?.browser.bemhtml.js']
+            }],
+            [techs.prependYm, { source: '?.pre.js' }],
+
+            // borschik
+            [techs.borschik, { sourceTarget: '?.js', destTarget: '_?.js', freeze: true, minify: isProd }],
+            [techs.borschik, { sourceTarget: '?.css', destTarget: '_?.css', tech: 'cleancss', freeze: true, minify: isProd }]
+        ]);
+
+        nodeConfig.addTargets([/* '?.bemtree.js', */ '?.html', '_?.css', '_?.js']);
+    });
+};

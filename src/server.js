@@ -78,20 +78,9 @@ module.exports = Server = inherit({
              * @param {Object} res - http response object
              */
             index: function (req, res) {
-                vow.resolve({})
-                    .then(function (context) {
-                        return this._template.execute(
-                            _.extend({ block: 'page', view: 'index' }, { data: context }), req);
-                    }, this)
-                    .then(function (html) {
-                        res.status(200);
-                        return res.end(html);
-                    })
-                    .fail(function (err) {
-                        res.status(500);
-                        return res.end(err);
-                    })
-                    .done();
+                fs.readFile('./public/index/index.html', { encoding: 'utf-8' }, function (err, html) {
+                    res.send(html);
+                });
             }
         };
     },

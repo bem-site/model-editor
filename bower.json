@@ -1,6 +1,6 @@
 {
-  "name": "bem-site-provider",
-  "description": "Data provider service",
+  "name": "bem-site-model-editor",
+  "description": "Model editor service",
   "version": "0.0.1",
   "authors": [
     {
@@ -10,7 +10,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/bem-site/provider.git"
+    "url": "git://github.com/bem-site/model-editor.git"
   },
   "ignore": [
     ".enb/tmp",

@@ -16,7 +16,7 @@ node_modules
 coverage
 
 .enb/tmp
-src/*.bundles/*/*.*
-!src/*.bundles/*/*.bemdecl.js
+public/*/*.*
+!public/*/*.bemjson.js
 test/test-data
 config/_config.json

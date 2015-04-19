@@ -23,9 +23,8 @@ module.exports = Template = inherit({
             cdir: process.cwd(),
             noLog: false
         });
-        this._targets = ['bemtree', 'bemhtml'].reduce(function (prev, item) {
-            prev[item] = util.format('src/%s.bundles/%s/%s.%s.js',
-                options.level, options['bundle'], options['bundle'], item);
+        this._targets = ['bemhtml'].reduce(function (prev, item) {
+            prev[item] = util.format('./public/%s/%s.%s.js', options['bundle'], options['bundle'], item);
             return prev;
         }, {});
         this._baseContext = vm['createContext']({
@@ -48,12 +47,7 @@ module.exports = Template = inherit({
             }, this))
             .then(function () {
                 this._template = require(path.join(process.cwd(), this._targets['bemhtml']));
-                var p = path.join(process.cwd(), this._targets['bemtree']);
-                return vowNode.promisify(fs.readFile)(p, { encoding: 'utf-8' });
-            }, this)
-            .then(function (content) {
-                vm['runInNewContext'](content, this._baseContext);
-                return this._baseContext;
+                return this;
             }, this);
     },
 
@@ -69,9 +63,6 @@ module.exports = Template = inherit({
             this.rebuild() : vow.resolve(this._baseContext);
 
         return rebuild
-            .then(function () {
-                return this._baseContext['BEMTREE'].apply(context);
-            }, this)
             .then(function (bemjson) {
                 if (request.query['__mode'] === 'bemjson') {
                     return stringify(bemjson, null, 2);
