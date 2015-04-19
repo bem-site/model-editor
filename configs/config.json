@@ -1,0 +1,7 @@
+{
+  "path": "./model/model.json",
+  "port": 3000,
+  "logger": {
+    "level": "debug"
+  }
+}
